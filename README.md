@@ -220,6 +220,9 @@ MongoDB Compass successfully connected to the MongoDB server running on the EC2 
 
 ---
 
+#<img width="2842" height="1670" alt="Screenshot 2026-07-09 111043" src="https://github.com/user-attachments/assets/68cdeea1-c20e-440c-a34f-6972447ac6e9" />
+
+
 # Authentication Process
 
 ```
