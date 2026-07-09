@@ -1,10 +1,8 @@
-# launching-an-EC2-instance
-launching an EC2 instance, connecting via SSH, installing MongoDB, and connecting from your laptop
 # Deploying MongoDB on an AWS EC2 Instance
 
 ## Objective
 
-The purpose of this task was to deploy a MongoDB database on an Amazon EC2 virtual machine running Ubuntu Linux. The database was configured to allow secure remote connections using SSH and MongoDB Compass.
+The objective of this project was to deploy a MongoDB database on an Amazon EC2 virtual machine running Ubuntu Linux. The database was configured to allow remote connections while restricting access using AWS Security Groups and SSH key authentication. The deployment was tested by connecting from MongoDB Compass on a local machine.
 
 ---
 
@@ -46,98 +44,96 @@ The purpose of this task was to deploy a MongoDB database on an Amazon EC2 virtu
 
 # Step 1 - Launch an EC2 Instance
 
-An Ubuntu EC2 instance was launched from the AWS Management Console.
+An Ubuntu EC2 instance was launched using the AWS Management Console.
 
 Configuration included:
 
 - Ubuntu Server
 - t2.micro instance
 - Security Group
-- Key Pair (.pem)
-- Public IP enabled
+- RSA Key Pair
+- Public IP address enabled
 
 ---
 
 # Step 2 - Create a Key Pair
 
-A new RSA key pair was created.
+A new RSA key pair was created to enable secure SSH authentication.
 
 Example:
 
 ```
-se-alina-key-pair.pem
+<YOUR-KEY-PAIR>
 ```
 
-The key pair consists of:
+Each key pair consists of:
 
-- Public Key (stored by AWS)
-- Private Key (.pem) downloaded to my computer
+- A **public key**, which is stored by AWS.
+- A **private key (.pem)**, which is downloaded once and stored securely on the local machine.
 
 The private key is required whenever connecting to the EC2 instance.
 
 ---
 
-# Step 3 - Connect to EC2 using SSH
+# Step 3 - Connect to the EC2 Instance
 
 The EC2 instance was accessed securely using SSH.
 
 Example command:
 
 ```bash
-ssh -i se-alina-key-pair.pem ubuntu@<EC2-Public-IP>
+ssh -i <YOUR-KEY>.pem ubuntu@<EC2-PUBLIC-IP>
 ```
 
-Successful login confirmed access to the Ubuntu server.
+A successful connection confirmed that the EC2 instance was accessible.
 
 ---
 
 # Step 4 - Update Ubuntu
 
-Before installing software the operating system was updated.
+Before installing MongoDB, the operating system was updated.
 
 ```bash
 sudo apt update
 sudo apt upgrade -y
 ```
 
-This installs the latest security patches.
+Updating the system ensures that the latest security patches and software updates are installed.
 
 ---
 
 # Step 5 - Install MongoDB
 
-MongoDB Community Edition was installed.
+MongoDB Community Edition was installed after adding the official MongoDB repository.
 
-The MongoDB repository was added before installation.
-
-Packages installed included:
+Installed packages included:
 
 - mongodb-org
 - mongod
 
 ---
 
-# Step 6 - Start MongoDB
+# Step 6 - Start the MongoDB Service
 
-MongoDB service was started.
+Start MongoDB:
 
 ```bash
 sudo systemctl start mongod
 ```
 
-Enable MongoDB to start automatically after reboot.
+Enable MongoDB to start automatically whenever the server boots:
 
 ```bash
 sudo systemctl enable mongod
 ```
 
-Verify status.
+Verify that MongoDB is running:
 
 ```bash
 sudo systemctl status mongod
 ```
 
-Expected result:
+Expected output:
 
 ```
 Active: active (running)
@@ -153,74 +149,78 @@ The MongoDB configuration file was edited.
 /etc/mongod.conf
 ```
 
-The bind IP was changed from
+The bind IP was changed from:
 
 ```
 127.0.0.1
 ```
 
-to
+to:
 
 ```
 0.0.0.0
 ```
 
-This allows remote connections.
+This allows MongoDB to accept remote connections.
 
-MongoDB was restarted afterwards.
+MongoDB was then restarted to apply the configuration.
 
 ```bash
 sudo systemctl restart mongod
 ```
 
+> **Note:** Although MongoDB was configured to accept remote connections, access was restricted using AWS Security Groups so that only my own public IP address could connect.
+
 ---
 
-# Step 8 - Configure Security Group
+# Step 8 - Configure the Security Group
 
-The EC2 Security Group was updated.
-
-Inbound Rules:
+The EC2 Security Group inbound rules were configured as follows:
 
 | Type | Port | Source |
 |------|------|--------|
 | SSH | 22 | My IP |
 | Custom TCP | 27017 | My IP |
 
-Only my IP address was allowed for security.
+Restricting access to **My IP** reduces the attack surface by preventing connections from other internet users.
 
 ---
 
 # Step 9 - Test MongoDB
 
-MongoDB shell was used to confirm the database was working.
+MongoDB Shell was used to verify that the server was running correctly.
+
+Launch the shell:
 
 ```bash
 mongosh
 ```
 
-Example:
+Display available databases:
 
 ```javascript
 show dbs
 ```
 
----
-
-# Step 10 - Connect from MongoDB Compass
-
-MongoDB Compass was installed on my laptop.
-
-Connection string:
-
-```
-mongodb://<EC2-Public-IP>:27017
-```
-
-Compass successfully connected to the MongoDB database running on the EC2 instance.
+Successful execution confirmed that MongoDB had been deployed correctly.
 
 ---
 
-# How Authentication Works
+# Step 10 - Connect Using MongoDB Compass
+
+MongoDB Compass was installed on the local machine.
+
+Example connection string:
+
+```
+mongodb://<EC2-PUBLIC-IP>:27017
+```
+
+MongoDB Compass successfully connected to the MongoDB server running on the EC2 instance.
+
+---
+
+# Authentication Process
 
 ```
 Laptop
@@ -233,55 +233,72 @@ Internet
 EC2 Public IP
     │
     ▼
-Ubuntu Server
+Ubuntu EC2 Instance
     │
     ▼
-MongoDB
+MongoDB Server
 ```
 
-The SSH private key authenticates access to the EC2 server.
+SSH uses the private key stored on the local machine to authenticate access to the EC2 instance.
 
-MongoDB listens on port **27017**.
+- SSH communicates over **Port 22**.
+- MongoDB listens on **Port 27017**.
 
-SSH communicates over port **22**.
+---
+
+# Security Considerations
+
+This deployment followed several security best practices:
+
+- SSH key authentication was used instead of passwords.
+- The private `.pem` key was stored locally and never uploaded to GitHub.
+- SSH access (Port 22) was restricted to **My IP**.
+- MongoDB access (Port 27017) was restricted to **My IP**.
+- Sensitive information such as AWS Account IDs, public IP addresses, usernames, and key names has been removed from this documentation.
+
+> **Note:** For this learning exercise, access was restricted using AWS Security Groups. In a production environment, MongoDB authentication, TLS encryption, and additional hardening should also be implemented.
 
 ---
 
 # Advantages of Deploying MongoDB on EC2
 
-- Accessible from anywhere
-- Runs continuously in the cloud
-- Easy to scale
-- Full control over the operating system
-- Can host multiple databases
+- Cloud-hosted database accessible remotely.
+- Full administrative control over the server.
+- Easy to scale as requirements increase.
+- Flexible configuration of networking and security.
+- Suitable for development, testing, and production workloads.
 
 ---
 
 # Challenges Encountered
 
-- Configuring SSH permissions
-- Opening the correct Security Group ports
-- Editing the MongoDB configuration file
-- Restarting the MongoDB service after configuration changes
-- Connecting remotely from MongoDB Compass
+During the deployment, several challenges were encountered:
+
+- Connecting securely to the EC2 instance using SSH.
+- Configuring Ubuntu and installing MongoDB.
+- Editing the MongoDB configuration file.
+- Configuring AWS Security Groups correctly.
+- Restarting services after configuration changes.
+- Connecting remotely using MongoDB Compass.
 
 ---
 
 # What I Learned
 
-Through this task I learned how to:
+Through this project I gained practical experience in:
 
-- Launch an EC2 instance
-- Create and use SSH key pairs
-- Connect securely to a Linux server
-- Install MongoDB on Ubuntu
-- Configure MongoDB for remote access
-- Manage Linux services using systemctl
-- Configure AWS Security Groups
-- Connect remotely using MongoDB Compass
+- Launching Amazon EC2 instances.
+- Creating and managing SSH key pairs.
+- Connecting securely to Linux servers.
+- Installing MongoDB on Ubuntu.
+- Managing Linux services with `systemctl`.
+- Configuring AWS Security Groups.
+- Enabling remote database access.
+- Connecting remotely using MongoDB Compass.
+- Understanding basic cloud networking and security.
 
 ---
 
 # Conclusion
 
-MongoDB was successfully deployed on an AWS EC2 instance. The server was configured for secure remote access using SSH and MongoDB Compass. This exercise provided practical experience with Linux server administration, AWS cloud infrastructure, networking, and NoSQL database deployment.
+MongoDB was successfully deployed on an AWS EC2 instance running Ubuntu Linux. The server was configured to allow remote access while restricting connectivity through AWS Security Groups and SSH key authentication. This project provided valuable hands-on experience with cloud infrastructure, Linux administration, networking, and NoSQL database deployment.
